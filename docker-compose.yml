@@ -1,7 +1,8 @@
 services:
   server:
-    build: .
+    image: "edaral3/agropecuaria:back"
+    restart: always
     ports:
-      - "8443:8443"
-  redis:
-    image: "redis:alpine"
+      - "3000:3000"
+    env_file: 
+      - .env
