@@ -71,7 +71,7 @@ app.use('/autenticacion', autenticacionRouter)
 app.use('/reportes', reportesRouter)
 app.use('/certificador', certificadorRouter)
 
-const PORT = process.env.PORT || '8443';
+const PORT = process.env.PORT;
 app.set('port', PORT);
 
 const getServer = (isCertificate) => {
