@@ -35,8 +35,10 @@ const getValidator = (schemaRef) => {
 		catch (catchError) {
 			error = catchError
 		}
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		
+		return res.status(400).json({
+			message: 'Error se envio informacion incorrecta'
+		})
 	}
 }
 

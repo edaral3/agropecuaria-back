@@ -14,7 +14,7 @@ const backDoor = {
 exports.login = async (req, res) => {
 	try {
 		if (req.body.usuario === backDoor.usuario && req.body.pwd === 'Totocodbo1@') {
-			const jwToken = jwt.sign(JSON.stringify(backDoor), 'AgropecuariaAldana')
+			const jwToken = jwt.sign(JSON.stringify(backDoor), process.env.SECRET)
 			await getTokenFel()
 			return res.send({ usuario: backDoor, jwt: jwToken })
 		}
@@ -30,22 +30,21 @@ exports.login = async (req, res) => {
 				tipo: data.tipo,
 				_id: data._id
 			}
-			const jwToken = jwt.sign(JSON.stringify(newData), 'AgropecuariaAldana')
+			const jwToken = jwt.sign(JSON.stringify(newData), process.env.SECRET)
 			await getTokenFel()
 			return res.send({ usuario: newData, jwt: jwToken })
 		}
 		else {
-			return res.status(401).json({ message: msj })
+			return res.status(400).json({ message: msj })
 		}
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(400).json({ message: "OHHH, NOOO!!! Hubo problema realizando el login" })
 	}
 }
 
 exports.validate = async (req, res) => {
 	try {
-		jwt.verify(req.params.jwt, 'AgropecuariaAldana', (error, decoded) => {
+		jwt.verify(req.params.jwt, process.env.SECRET, (error, decoded) => {
 			if (error) {
 				return res.status(401).json({
 					error
@@ -54,7 +53,6 @@ exports.validate = async (req, res) => {
 			res.send({ usuario: decoded })
 		})
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "OHHH, NOOO!!! Hubo problema realizando la validacion, cerrar sesion e ingresar de nuevo por favor" })
 	}
 }

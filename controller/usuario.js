@@ -9,13 +9,12 @@ exports.create = async (req, res) => {
 		await usuario.save(usuario)
 		return res.send('Usuario creado')
 	} catch (error) {
-		global.log.error(error, 500, req.body)
 		if (error.code == 11000) {
 			return res.status(500).json({
 				message: `El usuario ${req.body.usuario} ya existe`
 			})
 		}
-		return res.status(500).json(error)
+		return res.status(500).json({ message: "Error creando al usuario" });
 	}
 }
 
@@ -32,7 +31,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar usuarios se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar usuarios se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 	try {
 		let data
@@ -43,8 +42,7 @@ exports.getAll = async (req, res) => {
 				{ pwd: 0 }, { skip: skip, limit: limit }, res)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando usuario')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando al usuario" });
 	}
 }
 
@@ -53,9 +51,7 @@ exports.getOne = async (req, res) => {
 		const data = await Usuario.findById(req.params.id, { pwd: 0 })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando el usuario ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando al usuario" });
 	}
 }
 
@@ -65,9 +61,7 @@ exports.delete = async (req, res) => {
 		delete data.pwd
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 500,
-			`Error eliminando el usuario ${req.params.id}`)
-		return res.status(500).json(error)
+		return res.status(500).json({ message: "Error eliminando al usuario" });
 	}
 }
 
@@ -78,13 +72,11 @@ exports.update = async (req, res) => {
 		delete data.pwd
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 500,
-			`Error actualizando el usuario ${req.params.id}`)
 		if (error.code == 11000) {
 			return res.status(500).json({
 				message: `El usuario ${req.body.usuario} ya existe`
 			})
 		}
-		return res.status(500).json(error)
+		return res.status(500).json({ message: `Error actualizando el usuario ${req.params.id}` });
 	}
 }

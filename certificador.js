@@ -120,7 +120,7 @@ exports.anularFactura = async (data) => {
 		const anulaiconFirmada = await firmar(anulaicondata)
 		return await registrarAnulacion(anulaiconFirmada)
 	} catch (error) {
-		global.log.error(error, 0, data)
+		//global.log.error(error, 0, data)
 	}
 	return null
 }
@@ -134,7 +134,7 @@ exports.crearFactra = async (data) => {
 		const facturaFirmada = await solicitarFirma(data)
 		return await registrarDocumentoXML(facturaFirmada)
 	} catch (error) {
-		global.log.error(error, 0, data)
+		//global.log.error(error, 0, data)
 	}
 	return null
 }

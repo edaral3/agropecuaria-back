@@ -173,8 +173,7 @@ exports.getSalesByMont = async (req, res) => {
 
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }
 
@@ -207,8 +206,7 @@ exports.getSalesByYear = async (req, res) => {
 
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }
 
@@ -249,8 +247,7 @@ exports.getSalesBySalesByRange = async (req, res) => {
 
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }
 
@@ -300,8 +297,7 @@ exports.getTop10 = async (req, res) => {
 
 		return res.send({ labels, series: [listSeries] })
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }
 
@@ -337,35 +333,34 @@ exports.getDayReports = async (req, res) => {
 		}
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }
 
 const getPDFHeader = (tipo) => {
 	let name = ''
 	switch (tipo) {
-	case 1:
-		name = 'Ventas por dia'
-		break
-	case 2:
-		name = 'Ventas por mes'
-		break
-	case 3:
-		name = 'Ventas por año'
-		break
-	case 4:
-		name = 'Ventas por rango de tiempo'
-		break
-	case 5:
-		name = 'Productos agotados/por agotar'
-		break
-	case 6:
-		name = 'Productos vencidos/por vencer'
-		break
-	case 7:
-		name = 'Listado de productos'
-		break
+		case 1:
+			name = 'Ventas por dia'
+			break
+		case 2:
+			name = 'Ventas por mes'
+			break
+		case 3:
+			name = 'Ventas por año'
+			break
+		case 4:
+			name = 'Ventas por rango de tiempo'
+			break
+		case 5:
+			name = 'Productos agotados/por agotar'
+			break
+		case 6:
+			name = 'Productos vencidos/por vencer'
+			break
+		case 7:
+			name = 'Listado de productos'
+			break
 	}
 	return {
 		body: [
@@ -398,19 +393,19 @@ const getPDFHeader = (tipo) => {
 const getPDFDate = (tipo, date1, date2) => {
 	let textDate = ''
 	switch (tipo) {
-	case 1:
-		textDate = 'Fecha: ' + date1
-		break
-	case 2:
-		textDate = 'Mes: ' + date1
-		break
-	case 3:
-		textDate = 'Año: ' + date1
-		break
-	case 4:
-		textDate = 'Fecha inicio: ' + date1
+		case 1:
+			textDate = 'Fecha: ' + date1
+			break
+		case 2:
+			textDate = 'Mes: ' + date1
+			break
+		case 3:
+			textDate = 'Año: ' + date1
+			break
+		case 4:
+			textDate = 'Fecha inicio: ' + date1
 				+ '\nFecha Fin: ' + date2
-		break
+			break
 	}
 
 	return {
@@ -482,12 +477,12 @@ const tableTemplateHead = [
 const getColorTble = (type) => {
 	let color = '#7DCEA0'
 	switch (type) {
-	case 'NF':
-		color = '#F4D03F'
-		break
-	case 'CF':
-		color = '#85C1E9'
-		break
+		case 'NF':
+			color = '#F4D03F'
+			break
+		case 'CF':
+			color = '#85C1E9'
+			break
 	}
 
 	return {
@@ -891,31 +886,30 @@ exports.getReportePDF = async (req, res) => {
 	try {
 		let pdf64 = ''
 		switch (tipo) {
-		case '1':
-			pdf64 = await crearReporteDiario(date1)
-			break
-		case '2':
-			pdf64 = await crearReporteMensual(date1)
-			break
-		case '3':
-			pdf64 = await crearReporteAnual(date1)
-			break
-		case '4':
-			pdf64 = await crearReportePeriodo(date1, date2)
-			break
-		case '5':
-			pdf64 = await crearReporteAgotados()
-			break
-		case '6':
-			pdf64 = await crearReportePorVencer()
-			break
-		case '7':
-			pdf64 = await crearReporteAll()
-			break
+			case '1':
+				pdf64 = await crearReporteDiario(date1)
+				break
+			case '2':
+				pdf64 = await crearReporteMensual(date1)
+				break
+			case '3':
+				pdf64 = await crearReporteAnual(date1)
+				break
+			case '4':
+				pdf64 = await crearReportePeriodo(date1, date2)
+				break
+			case '5':
+				pdf64 = await crearReporteAgotados()
+				break
+			case '6':
+				pdf64 = await crearReportePorVencer()
+				break
+			case '7':
+				pdf64 = await crearReporteAll()
+				break
 		}
 		return res.send({ pdf: pdf64 })
 	} catch (error) {
-		global.log.error(error, 400, 'Error creando el reporte')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: 'Error creando el reporte' })
 	}
 }

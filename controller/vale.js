@@ -13,8 +13,7 @@ exports.create = async (req, res) => {
 		res.send(data)
 	} catch (error) {
 		await session.abortTransaction()
-		global.log.error(error, 400, req.body)
-		res.status(400).json(error)
+		return res.status(500).json({ message: "Error creando el vale" });
 	}
 	session.endSession()
 }
@@ -24,9 +23,7 @@ exports.pago = async (req, res) => {
 		const data = await Vale.findByIdAndUpdate(req.params.id, { $push: { pagos: req.body } })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando el vale ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error realizando el pago" });
 	}
 }
 
@@ -36,9 +33,7 @@ exports.getOne = async (req, res) => {
 			.populate('cliente')
 		res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando el vale ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando el vale" });
 	}
 }
 
@@ -47,9 +42,7 @@ exports.delete = async (req, res) => {
 		const data = await Vale.findByIdAndDelete(req.params.id)
 		res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error eliminando el vale ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error eliminando el vale" });
 	}
 }
 
@@ -58,25 +51,19 @@ exports.update = async (req, res) => {
 		const data = Vale.findByIdAndUpdate(req.params.id, { $set: req.body })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando el vale ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error actualizando el vale" });
 	}
 }
 
 exports.estado = async (req, res) => {
 	if (!req.query.estado || req.query.id) {
-		global.log.error('No se enviaron los parametros en para cambair el estado'
-			, 400, 'Cambio de estado')
-		return res.status(400).json('No se enviaron los parametros en para cambair el estado')
+		return res.status(400).json({ message: 'No se enviaron los parametros en para cambair el estado' })
 	}
 	try {
 		const data = await Vale.findByIdAndUpdate(req.query.id, { $set: req.query.estado })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando el vale ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error actualizando el vale" });
 	}
 }
 
@@ -95,7 +82,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar vales se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar vales se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 	try {
 		let data
@@ -105,15 +92,14 @@ exports.getAll = async (req, res) => {
 			data = await getAllFind({
 				cliente: id
 			}, { skip: skip, limit: limit },
-			res)
+				res)
 		else
 			data = await getAllFind({
 				fecha: new Date(date)
 			}, { skip: skip, limit: limit },
-			res)
+				res)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando el vale')
-		return res.status(400).json(error)
+		return res.status(400).json({ message: 'Error buscando el vale' })
 	}
 }

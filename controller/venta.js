@@ -21,17 +21,16 @@ exports.create = async (req, res) => {
 		const nuevaVenta = req.body
 		nuevaVenta.uuid = uuid.uuid
 		nuevaVenta.uuidEmision = uuid.uuidEmision
-		req.body.fecha =  req.body.fecha.split('.')[0]+'.000+00:00'
+		req.body.fecha = req.body.fecha.split('.')[0] + '.000+00:00'
 		const venta = new Venta(nuevaVenta)
 		const data = await venta.save({ session })
 
 		await session.commitTransaction()
 		res.send({ data, uuid: uuid.uuid })
 	} catch (error) {
-		errorLogs.create({error, body:req.body})
+		errorLogs.create({ error, body: req.body })
 		await session.abortTransaction()
-		global.log.error(error, 500, req.body)
-		res.status(500).json(error)
+		return res.status(500).json({ message: "Error creando la venta" });
 	}
 	session.endSession()
 }
@@ -44,9 +43,8 @@ exports.createFactura = async (req, res) => {
 		}
 		res.send({ message: 'Factura generada', uuid: uuid.uuid })
 	} catch (error) {
-		errorLogs.create({error, body:req.body})
-		global.log.error(error, 500, req.body)
-		res.status(500).json(error)
+		errorLogs.create({ error, body: req.body })
+		return res.status(500).json({ message: "Error creando la factura" });
 	}
 }
 
@@ -54,16 +52,15 @@ exports.createSinFactura = async (req, res) => {
 	const session = await db.mongoose.startSession()
 	session.startTransaction()
 	try {
-		req.body.fecha =  req.body.fecha.split('.')[0]+'.000+00:00'
+		req.body.fecha = req.body.fecha.split('.')[0] + '.000+00:00'
 		const venta = new Venta(req.body)
 		await updateProduct(req.body.productos, session)
 		const data = await venta.save({ session })
 		await session.commitTransaction()
-		res.send({data})
+		res.send({ data })
 	} catch (error) {
 		await session.abortTransaction()
-		global.log.error(error, 500, req.body)
-		res.status(500).json(error)
+		return res.status(500).json({ message: "Error realizando la venta" });
 	}
 	session.endSession()
 }
@@ -73,9 +70,7 @@ exports.getOne = async (req, res) => {
 		const data = await Venta.findById(req.params.id)
 		res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando la venta ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: `Error buscando la venta ${req.params.id}` });
 	}
 }
 
@@ -84,9 +79,7 @@ exports.delete = async (req, res) => {
 		const data = await Venta.findByIdAndDelete(req.params.id)
 		res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error eliminando la venta ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: `Error eliminando la venta ${req.params.id}` });
 	}
 }
 
@@ -95,9 +88,7 @@ exports.update = async (req, res) => {
 		const data = await Venta.findByIdAndUpdate(req.params.id, { $set: req.body })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando la venta ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: `Error actualizando la venta ${req.params.id}` });
 	}
 }
 
@@ -115,7 +106,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar ventas se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar ventas se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 	try {
 		let data
@@ -125,15 +116,14 @@ exports.getAll = async (req, res) => {
 		else {
 			data = await getAllFind({
 				$or: [{ nit: { $regex: filter, $options: 'i' } },
-					{ nombre: { $regex: filter, $options: 'i' } },
-					{ $expr: { $eq: [filter, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } }]
+				{ nombre: { $regex: filter, $options: 'i' } },
+				{ $expr: { $eq: [filter, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } }]
 			}, {},
-			res)
+				res)
 		}
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando la venta')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando la venta" });
 	}
 }
 
@@ -151,10 +141,9 @@ exports.anularVenta = async (req, res) => {
 		await session.commitTransaction()
 		res.send({ messase: 'Venta anulada' })
 	} catch (error) {
-		errorLogs.create({error, body:req.body})
+		errorLogs.create({ error, body: req.body })
 		await session.abortTransaction()
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error anulando la venta" });
 	}
 	session.endSession()
 }

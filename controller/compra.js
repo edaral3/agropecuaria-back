@@ -32,8 +32,7 @@ exports.create = async (req, res) => {
 		res.send('OK')
 	} catch (error) {
 		await session.abortTransaction()
-		global.log.error(error, 400, req.body)
-		res.status(400).json(error)
+		return res.status(500).json({ message: "Error realizando la compra" });
 	}
 	session.endSession()
 }
@@ -44,9 +43,7 @@ exports.getOne = async (req, res) => {
 			.populate('proveedor')
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando la compra ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error obteniendo la compra" });
 	}
 }
 
@@ -55,9 +52,7 @@ exports.delete = async (req, res) => {
 		const data = await Compra.findByIdAndDelete(req.params.id)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error eliminando la compra ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error eliminando la compra" });
 	}
 }
 
@@ -67,9 +62,7 @@ exports.update = async (req, res) => {
 		return res.send(data)
 	}
 	catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando la compra ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error actualizando la compra" });
 	}
 }
 
@@ -88,7 +81,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar compras se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar compras se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 	try {
 		let data
@@ -101,7 +94,6 @@ exports.getAll = async (req, res) => {
 			res)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando la compra')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando las compras" });
 	}
 }

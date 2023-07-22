@@ -7,8 +7,7 @@ exports.create = async (req, res) => {
 		const data = await cliente.save(cliente)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error creando al cliente" })
 	}
 }
 
@@ -25,7 +24,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar clientes se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar clientes se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 	try {
 		let data
@@ -36,8 +35,7 @@ exports.getAll = async (req, res) => {
 				{ skip: skip, limit: limit }, res)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando cliente')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando al cliente" })
 	}
 }
 
@@ -46,9 +44,7 @@ exports.getOne = async (req, res) => {
 		const data = await Cliente.findById(req.params.id)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando el cliente ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando al cliente" })
 	}
 }
 
@@ -57,9 +53,7 @@ exports.delete = async (req, res) => {
 		const data = await Cliente.findByIdAndDelete(req.params.id)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error eliminando el cliente ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error eliminando al cliente" })
 	}
 }
 
@@ -68,8 +62,6 @@ exports.update = async (req, res) => {
 		const data = await Cliente.findByIdAndUpdate(req.params.id, { $set: req.body })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando el cliente ${req.params.id}`)
-		return res.status(400).json(error)	
+		return res.status(500).json({ message: "Error actializando al cliente" })	
 	}
 }

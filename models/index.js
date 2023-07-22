@@ -8,7 +8,6 @@ const password = encodeURIComponent('dKsxdcXq5NeVdDNv')
 const db = {}
 db.mongoose = mongoose
 db.url = `mongodb+srv://${username}:${password}@agropecuariaaldana.ihlmx.mongodb.net/Agropecuaria`
-//db.url = `mongodb+srv://edgar:z7wB7legzrwYFjgD@agropecuariaaldana.ihlmx.mongodb.net/?retryWrites=true&w=majority`
 
 db.proveedor = require('./proveedor')(mongoose)
 db.producto = require('./producto')(mongoose)

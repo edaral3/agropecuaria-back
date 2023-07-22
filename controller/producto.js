@@ -7,8 +7,7 @@ exports.create = async (req, res) => {
 		const data = await producto.save(producto)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error creando el producto" });
 	}
 }
 
@@ -17,9 +16,7 @@ exports.getOne = async (req, res) => {
 		const data = await Producto.findById(req.params.id).populate('proveedor')
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando el producto ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error obteniendo el producto" });
 	}
 }
 
@@ -28,9 +25,7 @@ exports.getOneBarCode = async (req, res) => {
 		const data = await Producto.findOne({ codigoBarras: req.params.code }).populate('proveedor')
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error buscando el codigo de barras ${req.params.code}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando el codigo de barras ${req.params.code}" });
 	}
 }
 
@@ -39,9 +34,7 @@ exports.delete = async (req, res) => {
 		const data = await Producto.findByIdAndDelete(req.params.id)
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error eliminando el producto ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error eliminando el producto" });
 	}
 }
 
@@ -51,9 +44,7 @@ exports.update = async (req, res) => {
 		const data = await Producto.findByIdAndUpdate(req.params.id, { $set: req.body })
 		return res.send(data)
 	} catch (error) {
-		global.log.error(error, 400,
-			`Error actualizando el producto ${req.params.id}`)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error actualizando el producto" });
 	}
 }
 
@@ -71,7 +62,7 @@ exports.getAll = async (req, res) => {
 	const regex = /^[0-9]*$/
 
 	if (!regex.test(skip) || !regex.test(limit)) {
-		global.log.error('Para paginar productos se deben de enviar numeros', 400, { skip: skip, limit: limit })
+		//global.log.error('Para paginar productos se deben de enviar numeros', 400, { skip: skip, limit: limit })
 	}
 
 	try {
@@ -81,13 +72,12 @@ exports.getAll = async (req, res) => {
 		else
 			data = await getAllFind({
 				$or: [{ nombre: { $regex: name, $options: 'i' } },
-					{ descripcion: { $regex: name, $options: 'i' } },
-					{ codigoBarras: { $regex: name, $options: 'i' } }]
+				{ descripcion: { $regex: name, $options: 'i' } },
+				{ codigoBarras: { $regex: name, $options: 'i' } }]
 			}, { skip: skip, limit: limit },
-			res)
+				res)
 		return res.send(data.reverse())
 	} catch (error) {
-		global.log.error(error, 400, 'Error buscando productos')
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error buscando los productos" });
 	}
 }

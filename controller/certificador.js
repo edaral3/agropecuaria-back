@@ -6,17 +6,16 @@ const Venta = db.venta
 const { leerTemplate, anularFactura } = require('../certificador.js')
 let token = ''
 
-exports.solicitarToken = async (req, res) => {
+exports.solicitarToken = async (_req, res) => {
 	try {
 		token = await axios.post('https://apiv2.ifacere-fel.com/api/solicitarToken', process.env.USERINFO)
 		process.env.TOKEN = 'Bearer ' + token
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(400).json({ message: "Error solicitando el token a megaprint" })
 	}
 }
 
-exports.retornarXML = async (req, res) => {
+exports.retornarXML = async (_req, res) => {
 	try {
 		const template = `<?xml version="1.0" encoding="UTF-8"?>
         <RetornaXMLRequest>
@@ -33,8 +32,7 @@ exports.retornarXML = async (req, res) => {
 
 		res.send({ messase: 'Factura eliminada' })
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error retornando XML" })
 	}
 }
 
@@ -56,8 +54,7 @@ exports.retornarPDF = async (req, res) => {
 			})
 		res.send({ pdf: data.data.match(/<pdf>([^<]*)<\/pdf>/)[1] })
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error solicitando el PDF a megaprint" })
 	}
 }
 
@@ -80,8 +77,7 @@ exports.anularDocumentoXML = async (req, res) => {
 		res.send({ messase: 'Factura eliminada' })
 	} catch (error) {
 		await session.abortTransaction()
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error anulando la factura" })
 	}
 	session.endSession()
 }
@@ -116,7 +112,7 @@ exports.retornarDatosCliente = async (req, res) => {
 		}
 	} catch (error) {
 		console.log(error)
-		return res.status(400).json({ message: 'Ocurrio un error al solicitar el nit' })
+		return res.status(500).json({ message: 'Ocurrio un error al solicitar el nit' })
 	}
 }
 
@@ -124,7 +120,6 @@ exports.verificarDocumento = async (req, res) => {
 	try {
 		await axios.get('https://apiv2.ifacere-fel.com/api/verificarDocumento')
 	} catch (error) {
-		global.log.error(error, 400, req.body)
-		return res.status(400).json(error)
+		return res.status(500).json({ message: "Error verificando documento" })
 	}
 }
