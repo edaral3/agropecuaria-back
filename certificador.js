@@ -141,14 +141,12 @@ exports.crearFactra = async (data) => {
 
 exports.getTokenFel = async () => {
 	try {
-		console.log(process.env.USERINFO)
 		const body = process.env.USERINFO;
 		const newToken = await axios.post('https://apiv2.ifacere-fel.com/api/solicitarToken', body, {
 			headers: {
 				'Content-Type': 'application/xml',
 			}
 		})
-		console.log(newToken)
 		process.env.TOKEN = `Bearer ${newToken.data.match(/<token>([^<]*)<\/token>/)[1]}`
 
 	} catch (error) {

