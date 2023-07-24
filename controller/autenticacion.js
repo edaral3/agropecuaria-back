@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
 		const msj = 'Usuario o contraseña incorrecta'
 		const data = await Usuario.findOne({ usuario: req.body.usuario })
 		if (!data) {
-			throw { message: msj }
+			return res.status(400).json({ message: msj })
 		}
 		if (bcrypt.compareSync(req.body.pwd, data.pwd)) {
 			const newData = {
@@ -31,7 +31,11 @@ exports.login = async (req, res) => {
 				_id: data._id
 			}
 			const jwToken = jwt.sign(JSON.stringify(newData), process.env.SECRET)
-			await getTokenFel()
+			try {
+				await getTokenFel()
+			} catch (error) {
+				return res.status(400).json({ message: "OHHH, NOOO!!! Hubo problema realizando el login", error })
+			}
 			return res.send({ usuario: newData, jwt: jwToken })
 		}
 		else {
