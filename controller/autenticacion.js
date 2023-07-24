@@ -38,7 +38,7 @@ exports.login = async (req, res) => {
 			return res.status(400).json({ message: msj })
 		}
 	} catch (error) {
-		return res.status(400).json({ message: "OHHH, NOOO!!! Hubo problema realizando el login" })
+		return res.status(400).json({ message: "OHHH, NOOO!!! Hubo problema realizando el login", error })
 	}
 }
 
