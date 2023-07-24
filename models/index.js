@@ -2,12 +2,12 @@
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
 
-const username = encodeURIComponent('agro')
-const password = encodeURIComponent('dKsxdcXq5NeVdDNv')
+const username = encodeURIComponent(process.env.BDUSER)
+const password = encodeURIComponent(process.env.BDPWD)
 
 const db = {}
 db.mongoose = mongoose
-db.url = `mongodb+srv://${username}:${password}@agropecuariaaldana.ihlmx.mongodb.net/Agropecuaria`
+db.url = `mongodb+srv://${username}:${password}${process.env.BDURL}`
 
 db.proveedor = require('./proveedor')(mongoose)
 db.producto = require('./producto')(mongoose)
