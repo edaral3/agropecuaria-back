@@ -38,16 +38,28 @@ exports.create = async (req, res) => {
 	} catch (error) {
 		errorLogs.create({ error, body: req.body })
 		await session.abortTransaction()
-		return res.status(500).json({ message: "Error creando la venta" });
+		if (error.type === 400) {
+			return res.status(400).json({ message: error.message });
+		} else {
+			return res.status(500).json({ message: "Error creando la venta" });
+		}
 	}
 	session.endSession()
 }
 
 exports.createFactura = async (req, res) => {
 	try {
-		const uuid = await crearFactra(req.body)
-		if (!uuid) {
-			throw { message: 'Error generando la factura' }
+		let uuid = await crearFactra(req.body)
+		if (!uuid.uuidEmision) {
+			if (uuid?.response?.data?.error === 'invalid_token') {
+				await getTokenFel()
+				const uuid = await crearFactra(req.body)
+				if (!uuid.uuidEmision) {
+					throw { message: 'Error generando la factura' }
+				}
+			} else {
+				throw { message: 'Error generando la factura' }
+			}
 		}
 		res.send({ message: 'Factura generada', uuid: uuid.uuid })
 	} catch (error) {
@@ -68,7 +80,11 @@ exports.createSinFactura = async (req, res) => {
 		res.send({ data })
 	} catch (error) {
 		await session.abortTransaction()
-		return res.status(500).json({ message: error.message });
+		if (error.type === 400) {
+			return res.status(400).json({ message: error.message });
+		} else {
+			return res.status(500).json({ message: "Error creando la venta" });
+		}
 	}
 	session.endSession()
 }
