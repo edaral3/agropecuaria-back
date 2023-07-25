@@ -60,7 +60,7 @@ exports.createSinFactura = async (req, res) => {
 		res.send({ data })
 	} catch (error) {
 		await session.abortTransaction()
-		return res.status(500).json({ message: "Error realizando la venta" });
+		return res.status(500).json({ message: error.message });
 	}
 	session.endSession()
 }
