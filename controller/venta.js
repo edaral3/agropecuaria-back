@@ -3,7 +3,7 @@ const { updateProductLess } = require('../utilities/utils.js')
 const errorLogs = require('./errorLogs')
 const db = require('../models')
 const Venta = db.venta
-const { crearFactra } = require('../certificador')
+const { crearFactra, getTokenFel } = require('../certificador')
 
 exports.create = async (req, res) => {
 	const session = await db.mongoose.startSession()
@@ -14,9 +14,17 @@ exports.create = async (req, res) => {
 			return item
 		})
 		await updateProduct(productos, session)
-		const uuid = await crearFactra(req.body)
-		if (!uuid) {
-			throw { message: 'Error generando la factura' }
+		let uuid = await crearFactra(req.body)
+		if (!uuid.uuidEmision) {
+			if (uuid?.response?.data?.error === 'invalid_token') {
+				await getTokenFel()
+				const uuid = await crearFactra(req.body)
+				if (!uuid.uuidEmision) {
+					throw { message: 'Error generando la factura' }
+				}
+			} else {
+				throw { message: 'Error generando la factura' }
+			}
 		}
 		const nuevaVenta = req.body
 		nuevaVenta.uuid = uuid.uuid

@@ -53,7 +53,7 @@ const firmar = async (data) => {
 	let res = await axios.post('https://api.soluciones-mega.com/api/solicitaFirma', data, {
 		headers: {
 			'Content-Type': 'application/xml',
-			'Authorization': process.env.TOKEN,
+			'Authorization': process.env.TOKENFEL,
 		}
 	})
 	const documentoFirmado = res.data.match(/<xml_dte>([^<]*)<\/xml_dte>/)[1]
@@ -75,7 +75,7 @@ const registrarDocumentoXML = async (documentoFirmado) => {
 	let res = await axios.post('https://apiv2.ifacere-fel.com/api/registrarDocumentoXML', templateRegistro, {
 		headers: {
 			'Content-Type': 'application/xml',
-			'Authorization': process.env.TOKEN,
+			'Authorization': process.env.TOKENFEL,
 		}
 	})
 	validarRespuestas(res.data)
@@ -106,7 +106,7 @@ const registrarAnulacion = async (documentoFirmado) => {
 	let res = await axios.post('https://apiv2.ifacere-fel.com/api/anularDocumentoXML', template, {
 		headers: {
 			'Content-Type': 'application/xml',
-			'Authorization': process.env.TOKEN,
+			'Authorization': process.env.TOKENFEL,
 		}
 	})
 
@@ -120,9 +120,8 @@ exports.anularFactura = async (data) => {
 		const anulaiconFirmada = await firmar(anulaicondata)
 		return await registrarAnulacion(anulaiconFirmada)
 	} catch (error) {
-		//global.log.error(error, 0, data)
+		return error
 	}
-	return null
 }
 
 exports.leerTemplate = () => {
@@ -134,9 +133,8 @@ exports.crearFactra = async (data) => {
 		const facturaFirmada = await solicitarFirma(data)
 		return await registrarDocumentoXML(facturaFirmada)
 	} catch (error) {
-		//global.log.error(error, 0, data)
+		return error
 	}
-	return null
 }
 
 exports.getTokenFel = async () => {
@@ -147,7 +145,7 @@ exports.getTokenFel = async () => {
 				'Content-Type': 'application/xml',
 			}
 		})
-		process.env.TOKEN = `Bearer ${newToken.data.match(/<token>([^<]*)<\/token>/)[1]}`
+		process.env.TOKENFEL = `Bearer ${newToken.data.match(/<token>([^<]*)<\/token>/)[1]}`
 
 	} catch (error) {
 		console.log("Error obteniendo el token")

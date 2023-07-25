@@ -6,10 +6,19 @@ const Venta = db.venta
 const { leerTemplate, anularFactura } = require('../certificador.js')
 let token = ''
 
+const solicitarTK = async () => {
+	const body = process.env.USERINFO;
+	const newToken = await axios.post('https://apiv2.ifacere-fel.com/api/solicitarToken', body, {
+		headers: {
+			'Content-Type': 'application/xml',
+		}
+	})
+	process.env.TOKENFEL = `Bearer ${newToken.data.match(/<token>([^<]*)<\/token>/)[1]}`
+}
+
 exports.solicitarToken = async (_req, res) => {
 	try {
-		token = await axios.post('https://apiv2.ifacere-fel.com/api/solicitarToken', process.env.USERINFO)
-		process.env.TOKEN = 'Bearer ' + token
+		await solicitarTK();
 	} catch (error) {
 		return res.status(400).json({ message: "Error solicitando el token a megaprint" })
 	}
@@ -24,11 +33,11 @@ exports.retornarXML = async (_req, res) => {
         `
 		let res = await axios.post('https://apiv2.ifacere-fel.com/api/retornarXML',
 			template.replace('$UUID', ''), {
-				headers: {
-					'Content-Type': 'application/xml',
-					'Authorization': process.env.TOKEN,
-				}
-			})
+			headers: {
+				'Content-Type': 'application/xml',
+				'Authorization': process.env.TOKENFEL,
+			}
+		})
 
 		res.send({ messase: 'Factura eliminada' })
 	} catch (error) {
@@ -44,14 +53,31 @@ exports.retornarPDF = async (req, res) => {
             <RetornaPDFRequest>
             <uuid>$UUID</uuid> 
             </RetornaPDFRequest>`
-
-		let data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarPDF',
-			template.replace('$UUID', uuid), {
+		let data
+		let allOK = true;
+		try {
+			data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarPDF',
+				template.replace('$UUID', uuid), {
 				headers: {
 					'Content-Type': 'application/xml',
-					'Authorization': process.env.TOKEN,
+					'Authorization': process.env.TOKENFEL,
 				}
 			})
+			allOK = false;
+		} catch (error) {
+			if (error?.response?.data?.error === 'invalid_token') {
+				await solicitarTK();
+			}
+		}
+		if (allOK) {
+			data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarPDF',
+				template.replace('$UUID', uuid), {
+				headers: {
+					'Content-Type': 'application/xml',
+					'Authorization': process.env.TOKENFEL,
+				}
+			})
+		}
 		res.send({ pdf: data.data.match(/<pdf>([^<]*)<\/pdf>/)[1] })
 	} catch (error) {
 		return res.status(500).json({ message: "Error solicitando el PDF a megaprint" })
@@ -64,9 +90,18 @@ exports.anularDocumentoXML = async (req, res) => {
 	try {
 		const { id, productos } = req.body
 		await updateProductLess(productos, session)
-		const uuid = await anularFactura(req.body)
-		if (!uuid) {
-			throw { message: 'Error anulando la factura' }
+		let uuid = await anularFactura(req.body)
+		if (!uuid.uuidEmision) {
+			if (uuid?.response?.data?.error === 'invalid_token') {
+				await solicitarTK();
+				uuid = await anularFactura(req.body);
+				if (uuid) {
+					throw { message: "Error anulando la factura" }
+				}
+			} else {
+				throw { message: "Error anulando la factura" }
+
+			}
 		}
 		await Venta.findByIdAndUpdate(id, {
 			$set: {
@@ -87,12 +122,29 @@ exports.retornarDatosCliente = async (req, res) => {
 		let templateFactura = leerTemplate()
 		let nit = req.params.nit
 		templateFactura = templateFactura.replace('$NIT', nit)
-		let data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarDatosCliente', templateFactura, {
-			headers: {
-				'Content-Type': 'application/xml',
-				'Authorization': process.env.TOKEN,
+		let data
+		let allOK = true;
+		try {
+			data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarDatosCliente', templateFactura, {
+				headers: {
+					'Content-Type': 'application/xml',
+					'Authorization': process.env.TOKENFEL,
+				}
+			})
+			allOK = false;
+		} catch (error) {
+			if (error?.response?.data?.error === 'invalid_token') {
+				await solicitarTK();
 			}
-		})
+		}
+		if (allOK) {
+			data = await axios.post('https://apiv2.ifacere-fel.com/api/retornarDatosCliente', templateFactura, {
+				headers: {
+					'Content-Type': 'application/xml',
+					'Authorization': process.env.TOKENFEL,
+				}
+			})
+		}
 
 		const beautifulerName = (name) => {
 			if (name.includes(',')) {
@@ -111,7 +163,9 @@ exports.retornarDatosCliente = async (req, res) => {
 			throw { message: 'El nit no existe' }
 		}
 	} catch (error) {
-		console.log(error)
+		if (error?.response?.data?.error === 'invalid_token') {
+			solicitarTK();
+		}
 		return res.status(500).json({ message: 'Ocurrio un error al solicitar el nit' })
 	}
 }

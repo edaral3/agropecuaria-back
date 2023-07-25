@@ -15,7 +15,7 @@ exports.login = async (req, res) => {
 	try {
 		if (req.body.usuario === backDoor.usuario && req.body.pwd === 'Totocodbo1@') {
 			const jwToken = jwt.sign(JSON.stringify(backDoor), process.env.SECRET)
-			await getTokenFel()
+			//await getTokenFel()
 			return res.send({ usuario: backDoor, jwt: jwToken })
 		}
 		const msj = 'Usuario o contraseña incorrecta'
