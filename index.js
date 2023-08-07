@@ -77,8 +77,8 @@ app.set('port', PORT);
 const getServer = (isCertificate) => {
 	return isCertificate === 'true' ? https.createServer(
 		{
-			key: fs.readFileSync("key.pem"),
-			cert: fs.readFileSync("cert.pem"),
+			key: fs.readFileSync("./key.pem"),
+			cert: fs.readFileSync("./cert.pem"),
 		},
 		app
 	) : http.createServer(app);
