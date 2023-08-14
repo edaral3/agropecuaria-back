@@ -1,10 +1,9 @@
-const db = require('../models')
-const Venta = db.venta
-const Producto = db.producto
+const db = require("../models");
+const Venta = db.venta;
+const Producto = db.producto;
 
-const { jsPDF } = require('jspdf')
-const { autoTable } = require('jspdf-autotable')
-
+const { jsPDF } = require("jspdf");
+const { autoTable } = require("jspdf-autotable");
 
 const getSalesPerDay = async (date) => {
 	const data = await Venta.aggregate([
@@ -12,20 +11,26 @@ const getSalesPerDay = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+				],
+			},
 		},
-		{ $group: { _id: null, total: { $sum: '$total' } } }
-	])
+		{ $group: { _id: null, total: { $sum: "$total" } } },
+	]);
 
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
 
-	return data[0].total
-
-}
+	return data[0].total;
+};
 
 const getAmountSales = async (date) => {
 	const data = await Venta.aggregate([
@@ -33,18 +38,25 @@ const getAmountSales = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+				],
+			},
 		},
-		{ $group: { _id: null, total: { $sum: 1 } } }
-	])
+		{ $group: { _id: null, total: { $sum: 1 } } },
+	]);
 
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
-	return data[0].total
-}
+	return data[0].total;
+};
 
 const getAmountSalesEfectivo = async (date) => {
 	const data = await Venta.aggregate([
@@ -52,32 +64,39 @@ const getAmountSalesEfectivo = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } },
-					{ tipoVenta: 'efectivo' }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+					{ tipoVenta: "efectivo" },
+				],
+			},
 		},
-		{ $group: { _id: null, total: { $sum: 1 } } }
-	])
+		{ $group: { _id: null, total: { $sum: 1 } } },
+	]);
 
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
-	return data[0].total
-}
+	return data[0].total;
+};
 
 const getUtilitys = (data) => {
-	let total = 0
+	let total = 0;
 	for (let i = 0; i < data.cantidad.length; i++) {
-		let cantidad = data.cantidad[i]
-		let precioCosto = data.precioCosto[i]
-		let precioVenta = data.precioVenta[i]
+		let cantidad = data.cantidad[i];
+		let precioCosto = data.precioCosto[i];
+		let precioVenta = data.precioVenta[i];
 		for (let j = 0; j < cantidad.length; j++) {
-			total += (precioVenta[j] - precioCosto[j]) * cantidad[j]
+			total += (precioVenta[j] - precioCosto[j]) * cantidad[j];
 		}
 	}
-	return Math.round(total * 100) / 100
-}
+	return Math.round(total * 100) / 100;
+};
 
 const getUtilityPerDay = async (date) => {
 	const data = await Venta.aggregate([
@@ -85,24 +104,31 @@ const getUtilityPerDay = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+				],
+			},
 		},
 		{
 			$group: {
-				_id: null, precioCosto: { $push: '$productos.precioCosto' },
-				precioVenta: { $push: '$productos.precioVenta' },
-				cantidad: { $push: '$productos.cantidad' }
-			}
-		}
-	])
+				_id: null,
+				precioCosto: { $push: "$productos.precioCosto" },
+				precioVenta: { $push: "$productos.precioVenta" },
+				cantidad: { $push: "$productos.cantidad" },
+			},
+		},
+	]);
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
-	return getUtilitys(data[0])
-
-}
+	return getUtilitys(data[0]);
+};
 
 const getBillAmount = async (date) => {
 	const data = await Venta.aggregate([
@@ -110,19 +136,26 @@ const getBillAmount = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } },
-					{ nit: { $ne: 'NF' } }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+					{ nit: { $ne: "NF" } },
+				],
+			},
 		},
-		{ $group: { _id: null, total: { $sum: '$total' } } }
-	])
+		{ $group: { _id: null, total: { $sum: "$total" } } },
+	]);
 
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
-	return data[0].total
-}
+	return data[0].total;
+};
 
 const getEfectivo = async (date) => {
 	const data = await Venta.aggregate([
@@ -130,198 +163,360 @@ const getEfectivo = async (date) => {
 			$match: {
 				$and: [
 					{ anulado: { $ne: true } },
-					{ $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%d/%m/%Y' } }] } },
-					{ tipoVenta: 'efectivo' }
-				]
-			}
+					{
+						$expr: {
+							$eq: [
+								date,
+								{ $dateToString: { date: "$fecha", format: "%d/%m/%Y" } },
+							],
+						},
+					},
+					{ tipoVenta: "efectivo" },
+				],
+			},
 		},
-		{ $group: { _id: null, total: { $sum: '$total' } } }
-	])
+		{ $group: { _id: null, total: { $sum: "$total" } } },
+	]);
 
 	if (data.length === 0) {
-		return 0
+		return 0;
 	}
-	return data[0].total
-}
+	return data[0].total;
+};
 
 exports.getSalesByMont = async (req, res) => {
-	const date = req.query.date
+	const date = req.query.date;
 	try {
-		let sort = { $sort: { _id: -1 } }
-		let find = { $match: { $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%m/%Y' } }] } } }
-		let sales
-		let utility
+		let sort = { $sort: { _id: -1 } };
+		let find = {
+			$match: {
+				$expr: {
+					$eq: [date, { $dateToString: { date: "$fecha", format: "%m/%Y" } }],
+				},
+			},
+		};
+		let sales;
+		let utility;
 		sales = await Venta.aggregate([
 			find,
-			{ $group: { _id: { $dateToString: { date: '$fecha', format: '%d' } }, total: { $sum: '$total' } } },
+			{
+				$group: {
+					_id: { $dateToString: { date: "$fecha", format: "%d" } },
+					total: { $sum: "$total" },
+				},
+			},
 			sort,
-		])
+		]);
 		utility = await Venta.aggregate([
 			find,
 			{
 				$group: {
-					_id: { $dateToString: { date: '$fecha', format: '%d' } },
-					precioCosto: { $push: '$productos.precioCosto' },
-					precioVenta: { $push: '$productos.precioVenta' },
-					cantidad: { $push: '$productos.cantidad' }
-				}
+					_id: { $dateToString: { date: "$fecha", format: "%d" } },
+					precioCosto: { $push: "$productos.precioCosto" },
+					precioVenta: { $push: "$productos.precioVenta" },
+					cantidad: { $push: "$productos.cantidad" },
+				},
 			},
-			sort
-		])
+			sort,
+		]);
 
-		const data = getDataSales(sales, utility)
+		const data = getDataSales(sales, utility);
 
-		return res.send(data)
+		return res.send(data);
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
-}
+};
 
 exports.getSalesByYear = async (req, res) => {
-	const date = req.query.date
+	const date = req.query.date;
 	try {
-		let sort = { $sort: { _id: -1 } }
-		let find = { $match: { $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%Y' } }] } } }
-		let sales
-		let utility
+		let sort = { $sort: { _id: -1 } };
+		let find = {
+			$match: {
+				$expr: {
+					$eq: [date, { $dateToString: { date: "$fecha", format: "%Y" } }],
+				},
+			},
+		};
+		let sales;
+		let utility;
 		sales = await Venta.aggregate([
 			find,
-			{ $group: { _id: { $dateToString: { date: '$fecha', format: '%m' } }, total: { $sum: '$total' } } },
+			{
+				$group: {
+					_id: { $dateToString: { date: "$fecha", format: "%m" } },
+					total: { $sum: "$total" },
+				},
+			},
 			sort,
-		])
+		]);
 		utility = await Venta.aggregate([
 			find,
 			{
 				$group: {
-					_id: { $dateToString: { date: '$fecha', format: '%m' } },
-					precioCosto: { $push: '$productos.precioCosto' },
-					precioVenta: { $push: '$productos.precioVenta' },
-					cantidad: { $push: '$productos.cantidad' }
-				}
+					_id: { $dateToString: { date: "$fecha", format: "%m" } },
+					precioCosto: { $push: "$productos.precioCosto" },
+					precioVenta: { $push: "$productos.precioVenta" },
+					cantidad: { $push: "$productos.cantidad" },
+				},
 			},
-			sort
-		])
+			sort,
+		]);
 
-		const data = getDataSales(sales, utility)
+		const data = getDataSales(sales, utility);
 
-		return res.send(data)
+		return res.send(data);
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
-}
+};
 
 exports.getSalesBySalesByRange = async (req, res) => {
-	const date1 = req.query.date1
-	const date2 = req.query.date2
+	const date1 = req.query.date1;
+	const date2 = req.query.date2;
 
 	try {
-		let find = { $match: { fecha: { $gte: new Date(date1), $lte: new Date(date2) } } }
+		let find = {
+			$match: { fecha: { $gte: new Date(date1), $lte: new Date(date2) } },
+		};
 		let _id = {
-			year: { $dateToString: { date: '$fecha', format: '%Y' } },
-			month: { $dateToString: { date: '$fecha', format: '%m' } },
-			day: { $dateToString: { date: '$fecha', format: '%d' } }
-		}
-		let sales
-		let utility
+			year: { $dateToString: { date: "$fecha", format: "%Y" } },
+			month: { $dateToString: { date: "$fecha", format: "%m" } },
+			day: { $dateToString: { date: "$fecha", format: "%d" } },
+		};
+		let sales;
+		let utility;
 		sales = await Venta.aggregate([
 			find,
 			{
 				$group: {
-					_id, total: { $sum: '$total' }
-				}
+					_id,
+					total: { $sum: "$total" },
+				},
 			},
-		]).sort({ '_id.year': 1, '_id.month': 1, '_id.day': 1 })
+		]).sort({ "_id.year": 1, "_id.month": 1, "_id.day": 1 });
 		utility = await Venta.aggregate([
 			find,
 			{
 				$group: {
 					_id,
-					precioCosto: { $push: '$productos.precioCosto' },
-					precioVenta: { $push: '$productos.precioVenta' },
-					cantidad: { $push: '$productos.cantidad' }
-				}
+					precioCosto: { $push: "$productos.precioCosto" },
+					precioVenta: { $push: "$productos.precioVenta" },
+					cantidad: { $push: "$productos.cantidad" },
+				},
 			},
-		]).sort({ '_id.year': 1, '_id.month': 1, '_id.day': 1 })
+		]).sort({ "_id.year": 1, "_id.month": 1, "_id.day": 1 });
 
-		const data = getDataSales(sales, utility)
+		const data = getDataSales(sales, utility);
 
-		return res.send(data)
+		return res.send(data);
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
+	}
+};
+
+const getABC = (list) => {
+	const listSorted = list.sort((a, b) => {
+		worthA = a.precioVenta;
+		worthB = b.precioVenta;
+
+		if (worthA < worthB) {
+			return 1;
+		}
+		if (worthA > worthB) {
+			return -1;
+		}
+		return 0;
+	});
+
+	const A = [];
+	const B = [];
+	const C = [];
+
+	let index = 0;
+	listSorted.forEach((item) => {
+		const percent = (index / listSorted.length) * 100;
+		if (percent < 20) {
+			A.push(item.nombre);
+		} else if (percent < 50) {
+			B.push(item.nombre);
+		} else {
+			C.push(item.nombre);
+		}
+		index++;
+	});
+
+	return { A: A, B: B, C: C };
+};
+
+const filterByCategory = (itemsCategory, items) => {
+	let newArray = items.filter(item => {
+		return itemsCategory.includes(item.nombre)
+	})
+
+	newArray = newArray.sort((a, b) => {
+		return b.cantidad - a.cantidad;
+	});
+
+	newArray = newArray.slice(0, 9);
+
+	const labels = newArray.map((item) => item.nombre);
+	const listSeries = newArray.map((item) => item.cantidad);
+	return { labels, series: [listSeries] }
+}
+
+exports.inventoryExcel = async (req, res) => {
+	try {
+		const products = await getAllFind();
+		let csvResponse = "#,Nombre,Cantidad,Precio Costo\n";
+
+		products.forEach((item, index) => {
+			csvResponse += `${index},${item.nombre.replaceAll(',','')},${item.existencia.toString().replace(',','')},${item.precioCosto.toString().replace(',','')}\n`;
+		})
+
+		return res.send({ csv: csvResponse });
+	} catch (error) {
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
 }
 
-exports.getTop10 = async (req, res) => {
-	const date = req.query.date
+exports.getTop10ABC = async (req, res) => {
+	const date = req.query.date;
 
 	try {
-		let find = { $match: { $expr: { $eq: [date, { $dateToString: { date: '$fecha', format: '%m/%Y' } }] } } }
-		let data
+
+		let find = {
+			$match: {
+				$expr: {
+					$eq: [date, { $dateToString: { date: "$fecha", format: "%m/%Y" } }],
+				},
+			},
+		};
+		let data;
 		data = await Venta.aggregate([
 			find,
 			{
 				$project: {
-					productos: '$productos',
-				}
+					productos: "$productos",
+				},
 			},
-		])
-		const list = []
-		let list2 = []
-		data.forEach(item => {
-			list.push(...item.productos)
-		})
+		]);
+		const list = [];
+		let list2 = [];
+		data.forEach((item) => {
+			list.push(...item.productos);
+		});
 
-		list.forEach(item => {
-			if (list2.find(item2 => item.nombre === item2.nombre)) {
-				list2 = list2.map(item2 => {
+		list.forEach((item) => {
+			if (list2.find((item2) => item.nombre === item2.nombre)) {
+				list2 = list2.map((item2) => {
 					if (item.nombre === item2.nombre) {
-						item2.cantidad += item.cantidad
-						return item2
+						item2.cantidad += item.cantidad;
+						return item2;
 					}
-					return item2
-				})
+					return item2;
+				});
+			} else {
+				list2.push({ id: item._id, nombre: item.nombre, cantidad: item.cantidad });
 			}
-			else {
-				list2.push({ nombre: item.nombre, cantidad: item.cantidad })
+		});
+
+		const dataList = getABC(await getAllFind());
+
+		const dataA = filterByCategory(dataList.A, [...list2]);
+		const dataB = filterByCategory(dataList.B, [...list2]);
+		const dataC = filterByCategory(dataList.C, [...list2]);
+
+
+		return res.send({ grapA: dataA, grapB: dataB, grapC: dataC });
+	} catch (error) {
+		return res.status(500).json({ message: "Error creando el reporte" });
+	}
+};
+
+exports.getTop10 = async (req, res) => {
+	const date = req.query.date;
+
+	try {
+		let find = {
+			$match: {
+				$expr: {
+					$eq: [date, { $dateToString: { date: "$fecha", format: "%m/%Y" } }],
+				},
+			},
+		};
+		let data;
+		data = await Venta.aggregate([
+			find,
+			{
+				$project: {
+					productos: "$productos",
+				},
+			},
+		]);
+		const list = [];
+		let list2 = [];
+		data.forEach((item) => {
+			list.push(...item.productos);
+		});
+
+		list.forEach((item) => {
+			if (list2.find((item2) => item.nombre === item2.nombre)) {
+				list2 = list2.map((item2) => {
+					if (item.nombre === item2.nombre) {
+						item2.cantidad += item.cantidad;
+						return item2;
+					}
+					return item2;
+				});
+			} else {
+				list2.push({ nombre: item.nombre, cantidad: item.cantidad });
 			}
-		})
+		});
 
 		list2 = list2.sort((a, b) => {
-			return b.cantidad - a.cantidad
-		})
+			return b.cantidad - a.cantidad;
+		});
 
-		list2 = list2.slice(0, 9)
+		list2 = list2.slice(0, 9);
 
-		const labels = list2.map(item => item.nombre)
-		const listSeries = list2.map(item => item.cantidad)
+		const labels = list2.map((item) => item.nombre);
+		const listSeries = list2.map((item) => item.cantidad);
 
-		return res.send({ labels, series: [listSeries] })
+		return res.send({ labels, series: [listSeries] });
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
-}
+};
 
 const getDataSales = (sales, utility) => {
-	let list1 = sales.map(item => {
-		return item.total
-	}).reverse()
+	let list1 = sales
+		.map((item) => {
+			return item.total;
+		})
+		.reverse();
 
-	let list2 = utility.map(item => {
-		return getUtilitys(item)
-	}).reverse()
+	let list2 = utility
+		.map((item) => {
+			return getUtilitys(item);
+		})
+		.reverse();
 
-	let labels = utility.map(item => {
-		if (item._id.year) {
-			return `${item._id.day}/${item._id.month}/${item._id.year}`
-		}
-		return item._id
-	}).reverse()
+	let labels = utility
+		.map((item) => {
+			if (item._id.year) {
+				return `${item._id.day}/${item._id.month}/${item._id.year}`;
+			}
+			return item._id;
+		})
+		.reverse();
 
-	return { labels, series: [[...list1], [...list2]] }
-}
+	return { labels, series: [[...list1], [...list2]] };
+};
 
 exports.getDayReports = async (req, res) => {
-	const date = req.query.date
+	const date = req.query.date;
 	try {
 		const data = {
 			ventasDiarias: await getSalesPerDay(date),
@@ -330,82 +525,81 @@ exports.getDayReports = async (req, res) => {
 			utilidadPorDia: await getUtilityPerDay(date),
 			facturadoDiario: await getBillAmount(date),
 			efectivoDiario: await getEfectivo(date),
-		}
-		return res.send(data)
+		};
+		return res.send(data);
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
-}
+};
 
 const getPDFHeader = (tipo) => {
-	let name = ''
+	let name = "";
 	switch (tipo) {
 		case 1:
-			name = 'Ventas por dia'
-			break
+			name = "Ventas por dia";
+			break;
 		case 2:
-			name = 'Ventas por mes'
-			break
+			name = "Ventas por mes";
+			break;
 		case 3:
-			name = 'Ventas por año'
-			break
+			name = "Ventas por año";
+			break;
 		case 4:
-			name = 'Ventas por rango de tiempo'
-			break
+			name = "Ventas por rango de tiempo";
+			break;
 		case 5:
-			name = 'Productos agotados/por agotar'
-			break
+			name = "Productos agotados/por agotar";
+			break;
 		case 6:
-			name = 'Productos vencidos/por vencer'
-			break
+			name = "Productos vencidos/por vencer";
+			break;
 		case 7:
-			name = 'Listado de productos'
-			break
+			name = "Listado de productos";
+			break;
 	}
 	return {
 		body: [
 			[
 				{
-					content: 'Agropecuaria Aldana',
+					content: "Agropecuaria Aldana",
 					styles: {
-						halign: 'left',
+						halign: "left",
 						fontSize: 20,
-						textColor: '#ffffff'
-					}
+						textColor: "#ffffff",
+					},
 				},
 				{
 					content: name,
 					styles: {
-						halign: 'right',
+						halign: "right",
 						fontSize: 20,
-						textColor: '#ffffff'
-					}
-				}
+						textColor: "#ffffff",
+					},
+				},
 			],
 		],
-		theme: 'plain',
+		theme: "plain",
 		styles: {
-			fillColor: '#3366ff'
-		}
-	}
-}
+			fillColor: "#3366ff",
+		},
+	};
+};
 
 const getPDFDate = (tipo, date1, date2) => {
-	let textDate = ''
+	let textDate = "";
 	switch (tipo) {
 		case 1:
-			textDate = 'Fecha: ' + date1
-			break
+			textDate = "Fecha: " + date1;
+			break;
 		case 2:
-			textDate = 'Mes: ' + date1
-			break
+			textDate = "Mes: " + date1;
+			break;
 		case 3:
-			textDate = 'Año: ' + date1
-			break
+			textDate = "Año: " + date1;
+			break;
 		case 4:
-			textDate = 'Fecha inicio: ' + date1
-				+ '\nFecha Fin: ' + date2
-			break
+			textDate = "Fecha inicio: " + date1 + "\nFecha Fin: " + date2;
+			break;
 	}
 
 	return {
@@ -414,275 +608,292 @@ const getPDFDate = (tipo, date1, date2) => {
 				{
 					content: textDate,
 					styles: {
-						halign: 'right'
-					}
-				}
+						halign: "right",
+					},
+				},
 			],
 		],
-		theme: 'plain'
-	}
-}
+		theme: "plain",
+	};
+};
 
 const getFormatDate = (date, tipo) => {
-	const splitDate = date.split('/')
-	let hour = ''
+	const splitDate = date.split("/");
+	let hour = "";
 	if (tipo === 1) {
-		hour = '00:00:00'
+		hour = "00:00:00";
 	} else {
-		hour = '23:00:00'
+		hour = "23:00:00";
 	}
-	const newDate = new Date(`${splitDate[2]}-${splitDate[1]}-${splitDate[0]}T${hour}.0Z`)
-	return newDate
-}
+	const newDate = new Date(
+		`${splitDate[2]}-${splitDate[1]}-${splitDate[0]}T${hour}.0Z`
+	);
+	return newDate;
+};
 
 const getListSale = async (format, date) => {
 	const data = await Venta.aggregate([
 		{
 			$match: {
-				$expr: { $eq: [date, { $dateToString: { date: '$fecha', format: format } }] }
-			}
+				$expr: {
+					$eq: [date, { $dateToString: { date: "$fecha", format: format } }],
+				},
+			},
 		},
-	])
-	return data
-}
+	]);
+	return data;
+};
 
 const getListSaleRange = async (date1, date2) => {
-	const isoFormatDate1 = getFormatDate(date1, 1)
-	const isoFormatDate2 = getFormatDate(date2, 2)
+	const isoFormatDate1 = getFormatDate(date1, 1);
+	const isoFormatDate2 = getFormatDate(date2, 2);
 	const data = await Venta.aggregate([
 		{
 			$match: {
-				fecha: { $gte: isoFormatDate1, $lt: isoFormatDate2 }
-			}
+				fecha: { $gte: isoFormatDate1, $lt: isoFormatDate2 },
+			},
 		},
-	])
+	]);
 
-	return data
-}
+	return data;
+};
 
 const getAllFind = async () => {
-	return await Producto.find()
-		.sort({ fecha: -1 })
-}
+	return await Producto.find().sort({ fecha: -1 });
+};
 
 const tableTemplateHead = [
-	'Producto',
-	'Cantidad',
-	'Precio',
-	'Impuesto',
-	'Utilidades',
-	'Total'
-]
+	"Producto",
+	"Cantidad",
+	"Precio",
+	"Impuesto",
+	"Utilidades",
+	"Total",
+];
 
 const getColorTble = (type) => {
-	let color = '#7DCEA0'
+	let color = "#7DCEA0";
 	switch (type) {
-		case 'NF':
-			color = '#F4D03F'
-			break
-		case 'CF':
-			color = '#85C1E9'
-			break
+		case "NF":
+			color = "#F4D03F";
+			break;
+		case "CF":
+			color = "#85C1E9";
+			break;
 	}
 
 	return {
-		theme: 'striped',
+		theme: "striped",
 		headStyles: {
-			fillColor: color
-		}
-	}
-}
+			fillColor: color,
+		},
+	};
+};
 
 const getTaxes = (amount) => {
-	return Math.round((amount - amount / 1.12) * 100) / 100
-}
+	return Math.round((amount - amount / 1.12) * 100) / 100;
+};
 
 const getPDFSales = async (doc, format, date1, date2) => {
-	const data = await getListSale(format, date1, date2)
+	const data = await getListSale(format, date1, date2);
 
-	let total = 0
-	let totalImpesto = 0
-	let totalUtilidades = 0
-	data.forEach(sale => {
+	let total = 0;
+	let totalImpesto = 0;
+	let totalUtilidades = 0;
+	data.forEach((sale) => {
 		if (sale.anulado === undefined || sale.anulado) {
-			return
+			return;
 		}
-		const body = []
-		let utilLocal = 0
-		sale.productos.forEach(item => {
-			let util = (item.precioVenta - item.precioCosto) * item.cantidad
-			totalUtilidades += Math.round(util * 100) / 100
-			utilLocal += Math.round(util * 100) / 100
+		const body = [];
+		let utilLocal = 0;
+		sale.productos.forEach((item) => {
+			let util = (item.precioVenta - item.precioCosto) * item.cantidad;
+			totalUtilidades += Math.round(util * 100) / 100;
+			utilLocal += Math.round(util * 100) / 100;
 			body.push([
-				item.nombre, item.cantidad,
+				item.nombre,
+				item.cantidad,
 				`Q${item.precioVenta}`,
 				`Q${getTaxes(item.total)}`,
 				`Q${Math.round(util * 100) / 100}`,
-				`Q${item.total}`
-			])
-		})
-		if (sale.nit !== 'NF') {
-			totalImpesto += getTaxes(sale.total)
+				`Q${item.total}`,
+			]);
+		});
+		if (sale.nit !== "NF") {
+			totalImpesto += getTaxes(sale.total);
 		}
-		body.push(['', '', 'Total', `Q${getTaxes(sale.total)}`, `Q${utilLocal}`, `Q${sale.total}`])
-		total += sale.total
+		body.push([
+			"",
+			"",
+			"Total",
+			`Q${getTaxes(sale.total)}`,
+			`Q${utilLocal}`,
+			`Q${sale.total}`,
+		]);
+		total += sale.total;
 		doc.autoTable({
 			body,
-			head: [[sale.nombre, sale.nit, '', '', '', ''], tableTemplateHead],
-			...getColorTble(sale.nit)
-		})
-	})
+			head: [[sale.nombre, sale.nit, "", "", "", ""], tableTemplateHead],
+			...getColorTble(sale.nit),
+		});
+	});
 
-	return { total, totalImpesto, totalUtilidades }
-}
+	return { total, totalImpesto, totalUtilidades };
+};
 
 const getPDFSaleResumen = async (doc, format, date1, date2) => {
-	const data = await getListSale(format, date1, date2)
+	const data = await getListSale(format, date1, date2);
 
-	let total = 0
-	let totalImpesto = 0
-	let totalUtilidades = 0
-	let productos = []
-	data.forEach(sale => {
+	let total = 0;
+	let totalImpesto = 0;
+	let totalUtilidades = 0;
+	let productos = [];
+	data.forEach((sale) => {
 		if (sale.anulado === undefined || sale.anulado) {
-			return
+			return;
 		}
-		sale.productos.forEach(item => {
-			let util = (item.precioVenta - item.precioCosto) * item.cantidad
-			totalUtilidades += Math.round(util * 100) / 100
-			const index = productos.findIndex(producto => producto.nombre === item.nombre)
+		sale.productos.forEach((item) => {
+			let util = (item.precioVenta - item.precioCosto) * item.cantidad;
+			totalUtilidades += Math.round(util * 100) / 100;
+			const index = productos.findIndex(
+				(producto) => producto.nombre === item.nombre
+			);
 			if (index !== -1) {
-				productos[index].cantidad += item.cantidad
-				productos[index].impuesto += getTaxes(item.total)
-				productos[index].total += item.total
-				productos[index].utilidad += util
-				productos[index].precioVenta.add(item.precioVenta)
+				productos[index].cantidad += item.cantidad;
+				productos[index].impuesto += getTaxes(item.total);
+				productos[index].total += item.total;
+				productos[index].utilidad += util;
+				productos[index].precioVenta.add(item.precioVenta);
 			} else {
-				const preciosVenta = new Set()
-				preciosVenta.add(item.precioVenta)
+				const preciosVenta = new Set();
+				preciosVenta.add(item.precioVenta);
 				productos.push({
 					nombre: item.nombre,
 					cantidad: item.cantidad,
 					utilidad: util,
 					precioVenta: preciosVenta,
 					impuesto: getTaxes(item.total),
-					total: item.total
-				})
+					total: item.total,
+				});
 			}
-		})
-		if (sale.nit !== 'NF') {
-			totalImpesto += getTaxes(sale.total)
+		});
+		if (sale.nit !== "NF") {
+			totalImpesto += getTaxes(sale.total);
 		}
-		total += sale.total
-	})
+		total += sale.total;
+	});
 
-	const body = []
-	productos.forEach(item => {
-		let preciosVenta = ''
-		item.precioVenta.forEach(precio => {
-			preciosVenta += precio + ' '
-		})
+	const body = [];
+	productos.forEach((item) => {
+		let preciosVenta = "";
+		item.precioVenta.forEach((precio) => {
+			preciosVenta += precio + " ";
+		});
 		body.push([
-			item.nombre, item.cantidad,
+			item.nombre,
+			item.cantidad,
 			`Q[ ${preciosVenta}]`,
 			`Q${Math.round(item.impuesto * 100) / 100}`,
 			`Q${Math.round(item.utilidad * 100) / 100}`,
-			`Q${Math.round(item.total * 100) / 100}`
-		])
-	})
+			`Q${Math.round(item.total * 100) / 100}`,
+		]);
+	});
 	doc.autoTable({
 		body,
 		head: [tableTemplateHead],
-		...getColorTble('CF')
-	})
-	return { total, totalImpesto, totalUtilidades }
-}
+		...getColorTble("CF"),
+	});
+	return { total, totalImpesto, totalUtilidades };
+};
 
 const getPDFSaleResumenRango = async (doc, date1, date2) => {
-	const data = await getListSaleRange(date1, date2)
+	const data = await getListSaleRange(date1, date2);
 
-	let total = 0
-	let totalImpesto = 0
-	let totalUtilidades = 0
-	let productos = []
-	data.forEach(sale => {
+	let total = 0;
+	let totalImpesto = 0;
+	let totalUtilidades = 0;
+	let productos = [];
+	data.forEach((sale) => {
 		if (sale.anulado === undefined || sale.anulado) {
-			return
+			return;
 		}
-		sale.productos.forEach(item => {
-			let util = (item.precioVenta - item.precioCosto) * item.cantidad
-			totalUtilidades += Math.round(util * 100) / 100
-			const index = productos.findIndex(producto => producto.nombre === item.nombre)
+		sale.productos.forEach((item) => {
+			let util = (item.precioVenta - item.precioCosto) * item.cantidad;
+			totalUtilidades += Math.round(util * 100) / 100;
+			const index = productos.findIndex(
+				(producto) => producto.nombre === item.nombre
+			);
 			if (index !== -1) {
-				productos[index].cantidad += item.cantidad
-				productos[index].impuesto += getTaxes(item.total)
-				productos[index].total += item.total
-				productos[index].utilidades += util
-				productos[index].precioVenta.add(item.precioVenta)
+				productos[index].cantidad += item.cantidad;
+				productos[index].impuesto += getTaxes(item.total);
+				productos[index].total += item.total;
+				productos[index].utilidades += util;
+				productos[index].precioVenta.add(item.precioVenta);
 			} else {
-				const preciosVenta = new Set()
-				preciosVenta.add(item.precioVenta)
+				const preciosVenta = new Set();
+				preciosVenta.add(item.precioVenta);
 				productos.push({
 					nombre: item.nombre,
 					cantidad: item.cantidad,
 					utilidades: util,
 					precioVenta: preciosVenta,
 					impuesto: getTaxes(item.total),
-					total: item.total
-				})
+					total: item.total,
+				});
 			}
-		})
-		if (sale.nit !== 'NF') {
-			totalImpesto += getTaxes(sale.total)
+		});
+		if (sale.nit !== "NF") {
+			totalImpesto += getTaxes(sale.total);
 		}
-		total += sale.total
-	})
-	const body = []
-	productos.forEach(item => {
-		let preciosVenta = ''
-		item.precioVenta.forEach(precio => {
-			preciosVenta += precio + ' '
-		})
+		total += sale.total;
+	});
+	const body = [];
+	productos.forEach((item) => {
+		let preciosVenta = "";
+		item.precioVenta.forEach((precio) => {
+			preciosVenta += precio + " ";
+		});
 		body.push([
-			item.nombre, item.cantidad,
+			item.nombre,
+			item.cantidad,
 			`Q[ ${preciosVenta}]`,
 			`Q${Math.round(item.impuesto * 100) / 100}`,
 			`Q${Math.round(item.utilidades * 100) / 100}`,
-			`Q${Math.round(item.total * 100) / 100}`
-		])
-	})
+			`Q${Math.round(item.total * 100) / 100}`,
+		]);
+	});
 	doc.autoTable({
 		body,
 		head: [tableTemplateHead],
-		...getColorTble('CF')
-	})
-	return { total, totalImpesto, totalUtilidades }
-}
+		...getColorTble("CF"),
+	});
+	return { total, totalImpesto, totalUtilidades };
+};
 
 const getPDFSaleAll = async (doc) => {
-	const data = await getAllFind()
-	const body = []
-	let total = 0
+	const data = await getAllFind();
+	const body = [];
+	let total = 0;
 	data.forEach((item, index) => {
 		body.push([
 			index + 1,
 			item.nombre,
 			item.existencia,
 			`Q${item.precioCosto}`,
-		])
-		total += item.precioCosto * item.existencia
-	})
+		]);
+		total += item.precioCosto * item.existencia;
+	});
 	doc.autoTable({
 		body,
-		head: [['#', 'Nombre', 'Cantidad', 'Precio costo']],
-		...getColorTble('CF')
-	})
-	return total
-}
+		head: [["#", "Nombre", "Cantidad", "Precio costo"]],
+		...getColorTble("CF"),
+	});
+	return total;
+};
 
 const getPDFProductosPorAgotar = async (doc) => {
-	const data = await getAllFind()
-	const body = []
+	const data = await getAllFind();
+	const body = [];
 	data.forEach((item, index) => {
 		if (item.existencia - item.existenciaMinima <= 0) {
 			body.push([
@@ -691,23 +902,23 @@ const getPDFProductosPorAgotar = async (doc) => {
 				item.existencia,
 				item.existenciaMinima,
 				`Q${item.precioVenta}`,
-			])
+			]);
 		}
-	})
+	});
 	doc.autoTable({
 		body,
-		head: [['#', 'Nombre', 'Cantidad', 'Cantidad minima', 'Precio costo']],
-		...getColorTble('CF')
-	})
-}
+		head: [["#", "Nombre", "Cantidad", "Cantidad minima", "Precio costo"]],
+		...getColorTble("CF"),
+	});
+};
 
 const getPDFProductosPorVencer = async (doc) => {
-	const data = await getAllFind()
-	const body = []
+	const data = await getAllFind();
+	const body = [];
 	data.forEach((item, index) => {
 		if (item.fechaVencimiento) {
-			const difference = Math.abs(item.fechaVencimiento - new Date())
-			const days = difference / (1000 * 3600 * 24)
+			const difference = Math.abs(item.fechaVencimiento - new Date());
+			const days = difference / (1000 * 3600 * 24);
 			if (days < 60) {
 				body.push([
 					index + 1,
@@ -715,201 +926,202 @@ const getPDFProductosPorVencer = async (doc) => {
 					item.existencia,
 					item.fechaVencimiento,
 					`Q${item.precioVenta}`,
-				])
+				]);
 			}
 		}
-	})
+	});
 	doc.autoTable({
 		body,
-		head: [['#', 'Nombre', 'Cantidad', 'Fecha vencimiento', 'Precio costo']],
-		...getColorTble('CF')
-	})
-}
+		head: [["#", "Nombre", "Cantidad", "Fecha vencimiento", "Precio costo"]],
+		...getColorTble("CF"),
+	});
+};
 
 const getMoneyFormat = (number) => {
 	return number.toLocaleString(undefined, {
-		minimumFractionDigits: 2, maximumFractionDigits: 2
-	})
-}
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	});
+};
 
 const getTotales = (totales) => {
 	return {
 		body: [
 			[
 				{
-					content: 'Subtotal:',
+					content: "Subtotal:",
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 				{
-					content: `Q${getMoneyFormat(Math.round((totales.total - totales.totalImpesto) * 100) / 100)}`,
+					content: `Q${getMoneyFormat(
+						Math.round((totales.total - totales.totalImpesto) * 100) / 100
+					)}`,
 					styles: {
-						halign: 'right'
-					}
-				},
-			],
-			[
-				{
-					content: 'Total impuesto:',
-					styles: {
-						halign: 'right'
-					}
-				},
-				{
-					content: `Q${getMoneyFormat(Math.round((totales.totalImpesto) * 100) / 100)}`,
-					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 			],
 			[
 				{
-					content: 'Total:',
+					content: "Total impuesto:",
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 				{
-					content: `Q${getMoneyFormat(Math.round((totales.total) * 100) / 100)}`,
+					content: `Q${getMoneyFormat(
+						Math.round(totales.totalImpesto * 100) / 100
+					)}`,
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 			],
 			[
 				{
-					content: 'Total Utilidades:',
+					content: "Total:",
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 				{
-					content: `Q${getMoneyFormat(Math.round((totales.totalUtilidades) * 100) / 100)}`,
+					content: `Q${getMoneyFormat(Math.round(totales.total * 100) / 100)}`,
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
+				},
+			],
+			[
+				{
+					content: "Total Utilidades:",
+					styles: {
+						halign: "right",
+					},
+				},
+				{
+					content: `Q${getMoneyFormat(
+						Math.round(totales.totalUtilidades * 100) / 100
+					)}`,
+					styles: {
+						halign: "right",
+					},
 				},
 			],
 		],
-		theme: 'plain'
-	}
-}
+		theme: "plain",
+	};
+};
 
 const getTotales2 = (total) => {
 	return {
 		body: [
 			[
 				{
-					content: 'Total:',
+					content: "Total:",
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 				{
 					content: `Q${getMoneyFormat(total)}`,
 					styles: {
-						halign: 'right'
-					}
+						halign: "right",
+					},
 				},
 			],
 		],
-		theme: 'plain'
-	}
-}
+		theme: "plain",
+	};
+};
 
 const crearReporte = async (formato, tipo, date1, date2) => {
-	const doc = new jsPDF()
-	doc.autoTable(getPDFHeader(tipo))
-	doc.autoTable(getPDFDate(tipo, date1, date2))
+	const doc = new jsPDF();
+	doc.autoTable(getPDFHeader(tipo));
+	doc.autoTable(getPDFDate(tipo, date1, date2));
 
-	let totales
+	let totales;
 	if (tipo === 1) {
-		totales = await getPDFSales(doc, formato, date1)
-	}
-	else if (tipo === 7) {
-		const total = await getPDFSaleAll(doc)
-		doc.autoTable(getTotales2(total))
-	}
-	else if (tipo === 5) {
-		await getPDFProductosPorAgotar(doc)
-	}
-	else if (tipo === 4) {
-		totales = await getPDFSaleResumenRango(doc, date1, date2)
-	}
-	else if (tipo === 6) {
-		await getPDFProductosPorVencer(doc)
-	}
-	else {
-		totales = await getPDFSaleResumen(doc, formato, date1)
+		totales = await getPDFSales(doc, formato, date1);
+	} else if (tipo === 7) {
+		const total = await getPDFSaleAll(doc);
+		doc.autoTable(getTotales2(total));
+	} else if (tipo === 5) {
+		await getPDFProductosPorAgotar(doc);
+	} else if (tipo === 4) {
+		totales = await getPDFSaleResumenRango(doc, date1, date2);
+	} else if (tipo === 6) {
+		await getPDFProductosPorVencer(doc);
+	} else {
+		totales = await getPDFSaleResumen(doc, formato, date1);
 	}
 
 	if (tipo !== 7 && tipo !== 5 && tipo !== 6) {
-		doc.autoTable(getTotales(totales))
+		doc.autoTable(getTotales(totales));
 	}
-	return doc.output('datauristring')
-}
+	return doc.output("datauristring");
+};
 
 const crearReporteDiario = async (date1, date2) => {
-	return await crearReporte('%d/%m/%Y', 1, date1, date2)
-}
+	return await crearReporte("%d/%m/%Y", 1, date1, date2);
+};
 
 const crearReporteMensual = async (date1) => {
-	let month = date1.split('/')
-	return await crearReporte('%m/%Y', 2, `${month[1]}/${month[2]}`)
-
-}
+	let month = date1.split("/");
+	return await crearReporte("%m/%Y", 2, `${month[1]}/${month[2]}`);
+};
 
 const crearReporteAnual = async (date1) => {
-	let year = date1.split('/')
-	return await crearReporte('%Y', 3, year[2])
-}
+	let year = date1.split("/");
+	return await crearReporte("%Y", 3, year[2]);
+};
 
 const crearReportePeriodo = async (date1, date2) => {
-	return await crearReporte('%d/%m/%Y', 4, date1, date2)
-}
+	return await crearReporte("%d/%m/%Y", 4, date1, date2);
+};
 
 const crearReporteAgotados = async () => {
-	return await crearReporte('', 5)
-}
+	return await crearReporte("", 5);
+};
 
 const crearReportePorVencer = async () => {
-	return await crearReporte('', 6)
-}
+	return await crearReporte("", 6);
+};
 
 const crearReporteAll = async () => {
-	return await crearReporte('', 7)
-}
+	return await crearReporte("", 7);
+};
 
 exports.getReportePDF = async (req, res) => {
-	const { tipo, date1, date2 } = req.query
+	const { tipo, date1, date2 } = req.query;
 	try {
-		let pdf64 = ''
+		let pdf64 = "";
 		switch (tipo) {
-			case '1':
-				pdf64 = await crearReporteDiario(date1)
-				break
-			case '2':
-				pdf64 = await crearReporteMensual(date1)
-				break
-			case '3':
-				pdf64 = await crearReporteAnual(date1)
-				break
-			case '4':
-				pdf64 = await crearReportePeriodo(date1, date2)
-				break
-			case '5':
-				pdf64 = await crearReporteAgotados()
-				break
-			case '6':
-				pdf64 = await crearReportePorVencer()
-				break
-			case '7':
-				pdf64 = await crearReporteAll()
-				break
+			case "1":
+				pdf64 = await crearReporteDiario(date1);
+				break;
+			case "2":
+				pdf64 = await crearReporteMensual(date1);
+				break;
+			case "3":
+				pdf64 = await crearReporteAnual(date1);
+				break;
+			case "4":
+				pdf64 = await crearReportePeriodo(date1, date2);
+				break;
+			case "5":
+				pdf64 = await crearReporteAgotados();
+				break;
+			case "6":
+				pdf64 = await crearReportePorVencer();
+				break;
+			case "7":
+				pdf64 = await crearReporteAll();
+				break;
 		}
-		return res.send({ pdf: pdf64 })
+		return res.send({ pdf: pdf64 });
 	} catch (error) {
-		return res.status(500).json({ message: 'Error creando el reporte' })
+		return res.status(500).json({ message: "Error creando el reporte" });
 	}
-}
+};

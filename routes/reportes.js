@@ -15,5 +15,8 @@ router.get('/top10', reportes.getTop10)
 
 router.get('/GenerarReporte', reportes.getReportePDF)
 
+router.get('/top10ABC', reportes.getTop10ABC)
+
+router.get('/inventoryExcel', reportes.inventoryExcel)
 
 module.exports = router
