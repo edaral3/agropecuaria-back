@@ -427,6 +427,7 @@ exports.getTop10ABC = async (req, res) => {
 		const dataA = filterByCategory(dataList.A, [...list2]);
 		const dataB = filterByCategory(dataList.B, [...list2]);
 		const dataC = filterByCategory(dataList.C, [...list2]);
+		
 		return res.send({ grapA: dataA, grapB: dataB, grapC: dataC });
 	} catch (error) {
 		return res.status(500).json({ message: "Error creando el reporte" });
